@@ -1,0 +1,7 @@
+# local configuration holds the node secret
+rc-node.json
+*.log
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

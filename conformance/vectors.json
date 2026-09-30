@@ -1,0 +1,1487 @@
+{
+    "version": 1,
+    "generated_from": "reference/rc-knoten.php v1.3 (functions executed verbatim by PHP 8.4.26)",
+    "notes": [
+        "All strings are UTF-8. Non-ASCII characters are written as \\u escapes.",
+        "Byte streams (sse.chunks_b64) are base64 because a chunk may end inside a UTF-8 sequence.",
+        "Regex semantics of the reference (PCRE via PHP): a pattern with the /u flag is Unicode-aware (\\s, \\d, \\b, \\R match Unicode); a pattern WITHOUT /u is ASCII/byte based. trim() strips only \" \\t\\n\\r\\0\\x0B\". See PROTOCOL.md."
+    ],
+    "retry_suffix": "\n\nWICHTIG: Dein vorheriger Versuch enthielt eine Zahl, die nicht in den Quellen steht. Uebernimm Zahlen genau so, wie sie dort stehen, oder lass sie weg.",
+    "constants": {
+        "signature_prefix": "RC-KI-v2\n",
+        "signature_window_s": 300,
+        "heartbeat_s": 45,
+        "backoff": "min(300, 5 * consecutive_failures) seconds",
+        "teil_max_entries": 8,
+        "teil_max_bytes": 16000,
+        "stream_ms_min": 100,
+        "poll_wait_max": 60,
+        "image_max_bytes": 4194304,
+        "probe_system": "Antworte mit genau einem Wort.",
+        "probe_prompt": "Sag: Bereit",
+        "probe_max_tokens": 20,
+        "embed_probe_input": [
+            "Bereit"
+        ]
+    },
+    "signature": [
+        {
+            "name": "get_hol_probe",
+            "secret": "rcn_test_secret_0123456789abcdef",
+            "ts": "1790000000",
+            "method": "GET",
+            "path": "/v1/ki",
+            "query": "action=hol&knoten=kn-0123456789abcdef&n=0&warte=0&arten=chat&kann=chat&nonce=00112233aabbccdd",
+            "body": "",
+            "string_to_sign": "RC-KI-v2\n1790000000\nGET\n/v1/ki\naction=hol&knoten=kn-0123456789abcdef&n=0&warte=0&arten=chat&kann=chat&nonce=00112233aabbccdd\n",
+            "expected_hex": "5ce16ad733e66e8cfe0964a05b144027d7bf0d7e52c85abb70912a9c6f7a602a"
+        },
+        {
+            "name": "get_hol_longpoll",
+            "secret": "rcn_test_secret_0123456789abcdef",
+            "ts": "1790000001",
+            "method": "GET",
+            "path": "/v1/ki",
+            "query": "action=hol&knoten=kn-0123456789abcdef&n=3&warte=20&arten=chat%2Cuebersetzung&kann=chat%2Cuebersetzung%2Ceinbettung&bilder=1&nonce=0f1e2d3c4b5a6978",
+            "body": "",
+            "string_to_sign": "RC-KI-v2\n1790000001\nGET\n/v1/ki\naction=hol&knoten=kn-0123456789abcdef&n=3&warte=20&arten=chat%2Cuebersetzung&kann=chat%2Cuebersetzung%2Ceinbettung&bilder=1&nonce=0f1e2d3c4b5a6978\n",
+            "expected_hex": "707b0f0ec05672156e408c77a987f92719ae511f4000df57e1e2ad11ee10f3a4"
+        },
+        {
+            "name": "get_heartbeat",
+            "secret": "rcn_other",
+            "ts": "1790000002",
+            "method": "GET",
+            "path": "/v1/ki",
+            "query": "action=hol&knoten=kn-abc&n=0&warte=0&kann=chat&nonce=ffffffffffffffff",
+            "body": "",
+            "string_to_sign": "RC-KI-v2\n1790000002\nGET\n/v1/ki\naction=hol&knoten=kn-abc&n=0&warte=0&kann=chat&nonce=ffffffffffffffff\n",
+            "expected_hex": "1e5d3a722c9d8517f4c9660307593fbeb73f77d12d968e842687b9299a33d4c7"
+        },
+        {
+            "name": "post_bring_utf8",
+            "secret": "rcn_test_secret_0123456789abcdef",
+            "ts": "1790000003",
+            "method": "POST",
+            "path": "/v1/ki",
+            "query": "action=bring&knoten=kn-0123456789abcdef&nonce=a1b2c3d4e5f60718",
+            "body": "{\"ergebnisse\":[{\"id\":17,\"text\":\"Gr\u00fc\u00dfe \u2013 sch\u00f6n, 49 \u20ac\",\"grund\":\"\",\"modell\":\"mistral\",\"ms\":812,\"knoten\":\"kn-0123456789abcdef\"}]}",
+            "string_to_sign": "RC-KI-v2\n1790000003\nPOST\n/v1/ki\naction=bring&knoten=kn-0123456789abcdef&nonce=a1b2c3d4e5f60718\n{\"ergebnisse\":[{\"id\":17,\"text\":\"Gr\u00fc\u00dfe \u2013 sch\u00f6n, 49 \u20ac\",\"grund\":\"\",\"modell\":\"mistral\",\"ms\":812,\"knoten\":\"kn-0123456789abcdef\"}]}",
+            "expected_hex": "5d0b8256fe8edf3bdbabada4ab1e8e8ca197601c44b14a3fb3ab95ac2fc4adcf"
+        },
+        {
+            "name": "post_bring_failure",
+            "secret": "rcn_test_secret_0123456789abcdef",
+            "ts": "1790000004",
+            "method": "POST",
+            "path": "/v1/ki",
+            "query": "action=bring&knoten=kn-0123456789abcdef&nonce=1111222233334444",
+            "body": "{\"ergebnisse\":[{\"id\":5,\"text\":\"\",\"grund\":\"erfundene Zahl: 59\",\"modell\":\"m\",\"ms\":1500,\"knoten\":\"kn-0123456789abcdef\"}]}",
+            "string_to_sign": "RC-KI-v2\n1790000004\nPOST\n/v1/ki\naction=bring&knoten=kn-0123456789abcdef&nonce=1111222233334444\n{\"ergebnisse\":[{\"id\":5,\"text\":\"\",\"grund\":\"erfundene Zahl: 59\",\"modell\":\"m\",\"ms\":1500,\"knoten\":\"kn-0123456789abcdef\"}]}",
+            "expected_hex": "63868295f199d7851c7ebc7b037b75e821b4047715bee7905a5220f33db184b3"
+        },
+        {
+            "name": "post_teil",
+            "secret": "rcn_x",
+            "ts": "1790000005",
+            "method": "POST",
+            "path": "/v1/ki",
+            "query": "action=teil&knoten=kn-0123456789abcdef&nonce=5555666677778888",
+            "body": "{\"teile\":[{\"id\":17,\"n\":1,\"text\":\"Wir \u00f6ffnen \"}]}",
+            "string_to_sign": "RC-KI-v2\n1790000005\nPOST\n/v1/ki\naction=teil&knoten=kn-0123456789abcdef&nonce=5555666677778888\n{\"teile\":[{\"id\":17,\"n\":1,\"text\":\"Wir \u00f6ffnen \"}]}",
+            "expected_hex": "cf11df2333ca035cb96502103d2b1215c48a917c8ef2913f40ce584533f49998"
+        },
+        {
+            "name": "subpath_base_url",
+            "secret": "rcn_test_secret_0123456789abcdef",
+            "ts": "1790000006",
+            "method": "GET",
+            "path": "/staging/v1/ki",
+            "query": "action=hol&knoten=kn-0123456789abcdef&n=1&warte=20&arten=chat&kann=chat&nonce=0000000000000000",
+            "body": "",
+            "string_to_sign": "RC-KI-v2\n1790000006\nGET\n/staging/v1/ki\naction=hol&knoten=kn-0123456789abcdef&n=1&warte=20&arten=chat&kann=chat&nonce=0000000000000000\n",
+            "expected_hex": "1a2fa57592be27ac03a896190dbbe0ec110818a7a93d36b63b0d53b74622d0a7"
+        }
+    ],
+    "clean": [
+        {
+            "name": "think_block",
+            "input": "<think>Ich \u00fcberlege...</think>Die Antwort ist 42.",
+            "expected": "Die Antwort ist 42."
+        },
+        {
+            "name": "think_multiline",
+            "input": "<think>\nline1\nline2\n</think>\n\nHallo",
+            "expected": "Hallo"
+        },
+        {
+            "name": "think_unclosed",
+            "input": "<think>unfertig ohne Ende",
+            "expected": "unfertig ohne Ende"
+        },
+        {
+            "name": "html_tags",
+            "input": "Hallo <b>Welt</b>!",
+            "expected": "Hallo Welt !"
+        },
+        {
+            "name": "angle_brackets_math",
+            "input": "a > b and c < d",
+            "expected": "a > b and c < d"
+        },
+        {
+            "name": "angle_brackets_pair",
+            "input": "x < y > z",
+            "expected": "x z"
+        },
+        {
+            "name": "markdown",
+            "input": "**Fett** und __unter__ und `code` und # Titel",
+            "expected": "Fett und unter und code und Titel"
+        },
+        {
+            "name": "markdown_heading_lines",
+            "input": "## Oeffnungszeiten\n\n- Mo: 9 Uhr\n- Di: 10 Uhr",
+            "expected": "Oeffnungszeiten - Mo: 9 Uhr - Di: 10 Uhr"
+        },
+        {
+            "name": "lead_in_de_ist",
+            "input": "Hier ist die Antwort: Wir \u00f6ffnen um 9 Uhr.",
+            "expected": "Wir \u00f6ffnen um 9 Uhr."
+        },
+        {
+            "name": "lead_in_de_sind",
+            "input": "Hier sind die Details: A und B",
+            "expected": "A und B"
+        },
+        {
+            "name": "lead_in_de_case",
+            "input": "HIER IST, was ich wei\u00df: Ja.",
+            "expected": "Ja."
+        },
+        {
+            "name": "lead_in_en_is",
+            "input": "Here is the answer: We open at 9.",
+            "expected": "We open at 9."
+        },
+        {
+            "name": "lead_in_en_are_newline",
+            "input": "Here are the facts:\nA and B",
+            "expected": "A and B"
+        },
+        {
+            "name": "lead_in_antwort",
+            "input": "Antwort: Ja.",
+            "expected": "Ja."
+        },
+        {
+            "name": "lead_in_answer_upper",
+            "input": "ANSWER: yes",
+            "expected": "yes"
+        },
+        {
+            "name": "lead_in_not_at_start",
+            "input": "Die Antwort: 42",
+            "expected": "Die Antwort: 42"
+        },
+        {
+            "name": "lead_in_only_once",
+            "input": "Antwort: Antwort: doppelt",
+            "expected": "Antwort: doppelt"
+        },
+        {
+            "name": "lead_in_after_think",
+            "input": "<think>x</think>  Here is my reply: Fine.",
+            "expected": "Fine."
+        },
+        {
+            "name": "only_lead_in",
+            "input": "Antwort: <think>x</think>",
+            "expected": ""
+        },
+        {
+            "name": "quotes_german",
+            "input": "\u201eDas ist zitiert.\u201c",
+            "expected": "Das ist zitiert."
+        },
+        {
+            "name": "quotes_english",
+            "input": "\u201cQuoted text.\u201d",
+            "expected": "Quoted text."
+        },
+        {
+            "name": "quotes_guillemets",
+            "input": "\u00abGuillemets\u00bb",
+            "expected": "Guillemets"
+        },
+        {
+            "name": "quotes_straight",
+            "input": "\"Straight\"",
+            "expected": "Straight"
+        },
+        {
+            "name": "quotes_unclosed",
+            "input": "\u201eUnclosed quote",
+            "expected": "\u201eUnclosed quote"
+        },
+        {
+            "name": "quotes_two_quoted_parts",
+            "input": "\u201ea\u201c und \u201eb\u201c",
+            "expected": "a\u201c und \u201eb"
+        },
+        {
+            "name": "lead_in_then_quote",
+            "input": "Hier ist die Antwort: \u201eWir \u00f6ffnen um 9 Uhr.\u201c",
+            "expected": "Wir \u00f6ffnen um 9 Uhr."
+        },
+        {
+            "name": "newlines",
+            "input": "Zeile 1\nZeile 2\r\nZeile 3\rZeile 4",
+            "expected": "Zeile 1 Zeile 2 Zeile 3 Zeile 4"
+        },
+        {
+            "name": "double_spaces",
+            "input": "Zu   viele    Leerzeichen",
+            "expected": "Zu viele Leerzeichen"
+        },
+        {
+            "name": "tabs_and_outer_ws",
+            "input": "  \t Hallo \t Welt \n ",
+            "expected": "Hallo Welt"
+        },
+        {
+            "name": "nbsp_runs",
+            "input": "a\u00a0\u00a0b und c\u00a0d",
+            "expected": "a b und c\u00a0d"
+        },
+        {
+            "name": "nbsp_edges",
+            "input": "\u00a0Hallo\u00a0",
+            "expected": "\u00a0Hallo\u00a0"
+        },
+        {
+            "name": "unicode_line_separator",
+            "input": "a\u2028b",
+            "expected": "a b"
+        },
+        {
+            "name": "keine_antwort",
+            "input": "KEINE_ANTWORT",
+            "expected": "KEINE_ANTWORT"
+        },
+        {
+            "name": "empty",
+            "input": "",
+            "expected": ""
+        },
+        {
+            "name": "numbered_list",
+            "input": "Here is a list:\n1. A\n2. B",
+            "expected": "1. A 2. B"
+        },
+        {
+            "name": "lead_in_without_colon",
+            "input": "Hier ist alles gut.",
+            "expected": "Hier ist alles gut."
+        },
+        {
+            "name": "lead_in_heres_not_matched",
+            "input": "Here's the answer: yes",
+            "expected": "Here's the answer: yes"
+        },
+        {
+            "name": "lead_in_colon_on_next_line",
+            "input": "Hier ist\nAntwort: ja",
+            "expected": "Hier ist Antwort: ja"
+        }
+    ],
+    "numbers": [
+        {
+            "name": "same_number",
+            "text": "Das kostet 49 Euro.",
+            "facts": "Preis: 49 EUR",
+            "expected": null
+        },
+        {
+            "name": "invented",
+            "text": "Das kostet 59 Euro.",
+            "facts": "Preis: 49 EUR",
+            "expected": "59"
+        },
+        {
+            "name": "sep_space",
+            "text": "Wir haben 1 000 Nutzer.",
+            "facts": "1000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "sep_dot",
+            "text": "Wir haben 1.000 Nutzer.",
+            "facts": "1000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "sep_comma",
+            "text": "Wir haben 1,000 Nutzer.",
+            "facts": "1000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "sep_nbsp",
+            "text": "Wir haben 1\u00a0000 Nutzer.",
+            "facts": "1000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "sep_narrow_nbsp",
+            "text": "Wir haben 1\u202f000 Nutzer.",
+            "facts": "1 000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "sep_thin",
+            "text": "Wir haben 1\u2009000 Nutzer.",
+            "facts": "1.000 Nutzer",
+            "expected": null
+        },
+        {
+            "name": "facts_have_separator",
+            "text": "Es sind 10000 Stueck.",
+            "facts": "10 000 Stueck",
+            "expected": null
+        },
+        {
+            "name": "millions",
+            "text": "1.000.000 Besucher",
+            "facts": "1000000",
+            "expected": null
+        },
+        {
+            "name": "phone",
+            "text": "Tel. 0800 123 456",
+            "facts": "Telefon 0800123456",
+            "expected": null
+        },
+        {
+            "name": "decimal_comma",
+            "text": "1,5 Stunden",
+            "facts": "1 Stunde",
+            "expected": "5"
+        },
+        {
+            "name": "not_a_thousands_group",
+            "text": "12 34",
+            "facts": "1234",
+            "expected": "12"
+        },
+        {
+            "name": "four_digits_after_space",
+            "text": "1 0000",
+            "facts": "10000",
+            "expected": "1"
+        },
+        {
+            "name": "money_de",
+            "text": "1.234,56 \u20ac",
+            "facts": "Preis 1234,56",
+            "expected": null
+        },
+        {
+            "name": "version",
+            "text": "Version 2.0.1",
+            "facts": "Version 2.0.1",
+            "expected": null
+        },
+        {
+            "name": "date_reordered",
+            "text": "am 2024-09-30",
+            "facts": "Stand 30.09.2024",
+            "expected": null
+        },
+        {
+            "name": "leading_zero_matters",
+            "text": "am 9. Mai",
+            "facts": "am 09. Mai",
+            "expected": "9"
+        },
+        {
+            "name": "no_digits",
+            "text": "Keine Zahlen hier.",
+            "facts": "",
+            "expected": null
+        },
+        {
+            "name": "empty_text",
+            "text": "",
+            "facts": "123",
+            "expected": null
+        },
+        {
+            "name": "fullwidth_digits_ignored",
+            "text": "Preis \uff11\uff12\uff13",
+            "facts": "",
+            "expected": null
+        },
+        {
+            "name": "first_offender_reported",
+            "text": "Zwischen 7 und 8 Uhr, 9 Tage",
+            "facts": "7",
+            "expected": "8"
+        }
+    ],
+    "stream_cut": [
+        {
+            "name": "two_words",
+            "input": "Hallo Welt",
+            "expected": "Hallo "
+        },
+        {
+            "name": "trailing_space",
+            "input": "Hallo Welt ",
+            "expected": "Hallo Welt "
+        },
+        {
+            "name": "no_whitespace",
+            "input": "Hallo",
+            "expected": ""
+        },
+        {
+            "name": "empty",
+            "input": "",
+            "expected": ""
+        },
+        {
+            "name": "newline",
+            "input": "abc\ndef",
+            "expected": "abc\n"
+        },
+        {
+            "name": "tab",
+            "input": "a\tb",
+            "expected": "a\t"
+        },
+        {
+            "name": "carriage_return",
+            "input": "a\rb",
+            "expected": "a\r"
+        },
+        {
+            "name": "thousands_space_inside",
+            "input": "Preis 1 000",
+            "expected": "Preis "
+        },
+        {
+            "name": "digit_space_at_end",
+            "input": "Es sind 12 ",
+            "expected": "Es sind "
+        },
+        {
+            "name": "digit_space_letter",
+            "input": "Es sind 12 Tage",
+            "expected": "Es sind 12 "
+        },
+        {
+            "name": "letter_space_digit",
+            "input": "Seite 3",
+            "expected": "Seite "
+        },
+        {
+            "name": "multibyte",
+            "input": "Gr\u00fc\u00dfe an alle",
+            "expected": "Gr\u00fc\u00dfe an "
+        },
+        {
+            "name": "nbsp_is_not_a_cut",
+            "input": "a\u00a0b",
+            "expected": ""
+        },
+        {
+            "name": "only_space",
+            "input": " ",
+            "expected": " "
+        },
+        {
+            "name": "digit_space_digit_then_word",
+            "input": "um 1 000 Uhr",
+            "expected": "um 1 000 "
+        }
+    ],
+    "sse": [
+        {
+            "name": "basic_one_chunk",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiSGFsbG8ifX1dfQoKZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6IiBXZWx0In19XX0KCmRhdGE6IHsiaWQiOiJ4Iiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY2hvaWNlcyI6W3siaW5kZXgiOjAsImRlbHRhIjp7fSwiZmluaXNoX3JlYXNvbiI6InN0b3AifV19CgpkYXRhOiBbRE9ORV0KCg=="
+            ],
+            "expected": {
+                "text": "Hallo Welt",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Hallo Welt",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "basic_7_byte_chunks",
+            "chunks_b64": [
+                "ZGF0YTogew==",
+                "ImlkIjoieA==",
+                "Iiwib2JqZQ==",
+                "Y3QiOiJjaA==",
+                "YXQuY29tcA==",
+                "bGV0aW9uLg==",
+                "Y2h1bmsiLA==",
+                "ImNob2ljZQ==",
+                "cyI6W3siaQ==",
+                "bmRleCI6MA==",
+                "LCJkZWx0YQ==",
+                "Ijp7InJvbA==",
+                "ZSI6ImFzcw==",
+                "aXN0YW50Ig==",
+                "fX1dfQoKZA==",
+                "YXRhOiB7Ig==",
+                "aWQiOiJ4Ig==",
+                "LCJvYmplYw==",
+                "dCI6ImNoYQ==",
+                "dC5jb21wbA==",
+                "ZXRpb24uYw==",
+                "aHVuayIsIg==",
+                "Y2hvaWNlcw==",
+                "IjpbeyJpbg==",
+                "ZGV4IjowLA==",
+                "ImRlbHRhIg==",
+                "OnsiY29udA==",
+                "ZW50IjoiSA==",
+                "YWxsbyJ9fQ==",
+                "XX0KCmRhdA==",
+                "YTogeyJpZA==",
+                "IjoieCIsIg==",
+                "b2JqZWN0Ig==",
+                "OiJjaGF0Lg==",
+                "Y29tcGxldA==",
+                "aW9uLmNodQ==",
+                "bmsiLCJjaA==",
+                "b2ljZXMiOg==",
+                "W3siaW5kZQ==",
+                "eCI6MCwiZA==",
+                "ZWx0YSI6ew==",
+                "ImNvbnRlbg==",
+                "dCI6IiBXZQ==",
+                "bHQifX1dfQ==",
+                "CgpkYXRhOg==",
+                "IHsiaWQiOg==",
+                "IngiLCJvYg==",
+                "amVjdCI6Ig==",
+                "Y2hhdC5jbw==",
+                "bXBsZXRpbw==",
+                "bi5jaHVuaw==",
+                "IiwiY2hvaQ==",
+                "Y2VzIjpbew==",
+                "ImluZGV4Ig==",
+                "OjAsImRlbA==",
+                "dGEiOnt9LA==",
+                "ImZpbmlzaA==",
+                "X3JlYXNvbg==",
+                "Ijoic3RvcA==",
+                "In1dfQoKZA==",
+                "YXRhOiBbRA==",
+                "T05FXQoK"
+            ],
+            "expected": {
+                "text": "Hallo Welt",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Hallo Welt",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "byte_by_byte",
+            "chunks_b64": [
+                "ZA==",
+                "YQ==",
+                "dA==",
+                "YQ==",
+                "Og==",
+                "IA==",
+                "ew==",
+                "Ig==",
+                "aQ==",
+                "ZA==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "eA==",
+                "Ig==",
+                "LA==",
+                "Ig==",
+                "bw==",
+                "Yg==",
+                "ag==",
+                "ZQ==",
+                "Yw==",
+                "dA==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "Yw==",
+                "aA==",
+                "YQ==",
+                "dA==",
+                "Lg==",
+                "Yw==",
+                "bw==",
+                "bQ==",
+                "cA==",
+                "bA==",
+                "ZQ==",
+                "dA==",
+                "aQ==",
+                "bw==",
+                "bg==",
+                "Lg==",
+                "Yw==",
+                "aA==",
+                "dQ==",
+                "bg==",
+                "aw==",
+                "Ig==",
+                "LA==",
+                "Ig==",
+                "Yw==",
+                "aA==",
+                "bw==",
+                "aQ==",
+                "Yw==",
+                "ZQ==",
+                "cw==",
+                "Ig==",
+                "Og==",
+                "Ww==",
+                "ew==",
+                "Ig==",
+                "aQ==",
+                "bg==",
+                "ZA==",
+                "ZQ==",
+                "eA==",
+                "Ig==",
+                "Og==",
+                "MA==",
+                "LA==",
+                "Ig==",
+                "ZA==",
+                "ZQ==",
+                "bA==",
+                "dA==",
+                "YQ==",
+                "Ig==",
+                "Og==",
+                "ew==",
+                "Ig==",
+                "cg==",
+                "bw==",
+                "bA==",
+                "ZQ==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "YQ==",
+                "cw==",
+                "cw==",
+                "aQ==",
+                "cw==",
+                "dA==",
+                "YQ==",
+                "bg==",
+                "dA==",
+                "Ig==",
+                "fQ==",
+                "fQ==",
+                "XQ==",
+                "fQ==",
+                "Cg==",
+                "Cg==",
+                "ZA==",
+                "YQ==",
+                "dA==",
+                "YQ==",
+                "Og==",
+                "IA==",
+                "ew==",
+                "Ig==",
+                "aQ==",
+                "ZA==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "eA==",
+                "Ig==",
+                "LA==",
+                "Ig==",
+                "bw==",
+                "Yg==",
+                "ag==",
+                "ZQ==",
+                "Yw==",
+                "dA==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "Yw==",
+                "aA==",
+                "YQ==",
+                "dA==",
+                "Lg==",
+                "Yw==",
+                "bw==",
+                "bQ==",
+                "cA==",
+                "bA==",
+                "ZQ==",
+                "dA==",
+                "aQ==",
+                "bw==",
+                "bg==",
+                "Lg==",
+                "Yw==",
+                "aA==",
+                "dQ==",
+                "bg==",
+                "aw==",
+                "Ig==",
+                "LA==",
+                "Ig==",
+                "Yw==",
+                "aA==",
+                "bw==",
+                "aQ==",
+                "Yw==",
+                "ZQ==",
+                "cw==",
+                "Ig==",
+                "Og==",
+                "Ww==",
+                "ew==",
+                "Ig==",
+                "aQ==",
+                "bg==",
+                "ZA==",
+                "ZQ==",
+                "eA==",
+                "Ig==",
+                "Og==",
+                "MA==",
+                "LA==",
+                "Ig==",
+                "ZA==",
+                "ZQ==",
+                "bA==",
+                "dA==",
+                "YQ==",
+                "Ig==",
+                "Og==",
+                "ew==",
+                "Ig==",
+                "Yw==",
+                "bw==",
+                "bg==",
+                "dA==",
+                "ZQ==",
+                "bg==",
+                "dA==",
+                "Ig==",
+                "Og==",
+                "Ig==",
+                "Sg==",
+                "YQ==",
+                "Lg==",
+                "Ig==",
+                "fQ==",
+                "fQ==",
+                "XQ==",
+                "fQ==",
+                "Cg==",
+                "Cg==",
+                "ZA==",
+                "YQ==",
+                "dA==",
+                "YQ==",
+                "Og==",
+                "IA==",
+                "Ww==",
+                "RA==",
+                "Tw==",
+                "Tg==",
+                "RQ==",
+                "XQ==",
+                "Cg==",
+                "Cg=="
+            ],
+            "expected": {
+                "text": "Ja.",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Ja.",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "split_inside_multibyte",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiR3LD",
+                "vMOfZSAifX1dfQoKZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6IuKA",
+                "kyBzY2jDtm4ifX1dfQoKZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnt9LCJmaW5pc2hfcmVhc29uIjoic3RvcCJ9XX0KCmRhdGE6IFtET05FXQoK"
+            ],
+            "expected": {
+                "text": "Gr\u00fc\u00dfe \u2013 sch\u00f6n",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Gr\u00fc\u00dfe \u2013 sch\u00f6n",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "crlf_split_between_cr_lf",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19DQ==",
+                "Cg0KZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZQ==",
+                "dGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiSGFsbG8ifX1dfQ0KDQpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiIFdlbHQifX1dfQ0KDQpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6e30sImZpbmlzaF9yZWFzb24iOiJzdG9wIn1dfQ0KDQpkYXRhOiBbRE9ORV0NCg0K"
+            ],
+            "expected": {
+                "text": "Hallo Welt",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Hallo Welt",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "no_space_after_data_comments_events",
+            "chunks_b64": [
+                "OiBrZWVwLWFsaXZlCgpldmVudDogbWVzc2FnZQppZDogMQpkYXRhOnsiY2hvaWNlcyI6W3siZGVsdGEiOnsiY29udGVudCI6IkEifX1dfQoKcmV0cnk6IDEwMDAKZGF0YTogIHsiY2hvaWNlcyI6W3siZGVsdGEiOnsiY29udGVudCI6IkIifX1dfSAgCgpkYXRhOltET05FXQoK"
+            ],
+            "expected": {
+                "text": "AB",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "AB",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "finish_reason_without_done",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiTnVyIn19XX0KCmRhdGE6IHsiaWQiOiJ4Iiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY2hvaWNlcyI6W3siaW5kZXgiOjAsImRlbHRhIjp7ImNvbnRlbnQiOiIgc28ifSwiZmluaXNoX3JlYXNvbiI6InN0b3AifV19Cgo="
+            ],
+            "expected": {
+                "text": "Nur so",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Nur so",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "no_trailing_newline",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZA==",
+                "IjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJyb2xlIjoiYXNzaXN0YW50In19XX0KCmRhdGE6IHsiaWQiOiJ4Iiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY2hvaWNlcyI6W3siaW5kZXgiOjAsImRlbHRhIjp7ImNvbnRlbnQiOiJFbmRlIn19XX0KCmRhdGE6IFtET05FXQ=="
+            ],
+            "expected": {
+                "text": "Ende",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Ende",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "error_event_vllm",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiVGVpbCJ9fV19CgpkYXRhOiB7ImVycm9yIjp7Im1lc3NhZ2UiOiJvdXQgb2YgbWVtb3J5IiwidHlwZSI6IkludGVybmFsU2VydmVyRXJyb3IiLCJjb2RlIjo1MDB9fQoKZGF0YTogW0RPTkVdCgo="
+            ],
+            "expected": {
+                "text": "Teil",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": "out of memory"
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Modell-Strom: out of memory"
+            }
+        },
+        {
+            "name": "error_object_error",
+            "chunks_b64": [
+                "ZGF0YTogeyJvYmplY3QiOiJlcnJvciIsIm1lc3NhZ2UiOiJiYWQgcmVxdWVzdCIsInR5cGUiOiJCYWRSZXF1ZXN0RXJyb3IiLCJjb2RlIjo0MDB9Cgo="
+            ],
+            "expected": {
+                "text": "",
+                "sse": true,
+                "has_content": false,
+                "ended": false,
+                "error": "bad request"
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Modell-Strom: bad request"
+            }
+        },
+        {
+            "name": "error_string",
+            "chunks_b64": [
+                "ZGF0YTogeyJlcnJvciI6InF1b3RhIGV4Y2VlZGVkIn0KCmRhdGE6IFtET05FXQoK"
+            ],
+            "expected": {
+                "text": "",
+                "sse": true,
+                "has_content": false,
+                "ended": true,
+                "error": "quota exceeded"
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Modell-Strom: quota exceeded"
+            }
+        },
+        {
+            "name": "no_termination",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiYWJnZWJyb2NoZW4ifX1dfQoK"
+            ],
+            "expected": {
+                "text": "abgebrochen",
+                "sse": true,
+                "has_content": true,
+                "ended": false,
+                "error": ""
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Strom ohne Abschluss"
+            }
+        },
+        {
+            "name": "role_only_then_done",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiBbRE9ORV0KCg=="
+            ],
+            "expected": {
+                "text": "",
+                "sse": true,
+                "has_content": false,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Antwort ohne Text"
+            }
+        },
+        {
+            "name": "empty_string_content",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsicm9sZSI6ImFzc2lzdGFudCJ9fV19CgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiIn19XX0KCmRhdGE6IFtET05FXQoK"
+            ],
+            "expected": {
+                "text": "",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "content_null_ignored",
+            "chunks_b64": [
+                "ZGF0YTogeyJjaG9pY2VzIjpbeyJkZWx0YSI6eyJjb250ZW50IjpudWxsfX1dfQoKZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6IlgifX1dfQoKZGF0YTogW0RPTkVdCgo="
+            ],
+            "expected": {
+                "text": "X",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "X",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "invalid_json_line_ignored",
+            "chunks_b64": [
+                "ZGF0YToge2thcHV0dAoKZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6Ik9LIn19XX0KCmRhdGE6IFtET05FXQoK"
+            ],
+            "expected": {
+                "text": "OK",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "OK",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "content_after_done_still_appended",
+            "chunks_b64": [
+                "ZGF0YTogeyJpZCI6IngiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwiZGVsdGEiOnsiY29udGVudCI6IkEifX1dfQoKZGF0YTogW0RPTkVdCgpkYXRhOiB7ImlkIjoieCIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbi5jaHVuayIsImNob2ljZXMiOlt7ImluZGV4IjowLCJkZWx0YSI6eyJjb250ZW50IjoiQiJ9fV19Cgo="
+            ],
+            "expected": {
+                "text": "AB",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "AB",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "unicode_escapes_in_json",
+            "chunks_b64": [
+                "ZGF0YTogeyJjaG9pY2VzIjpbeyJkZWx0YSI6eyJjb250ZW50IjoiR3JcdTAwZmNcdTAwZGZlIFx1ZDgzZFx1ZGUwMCJ9fV19CgpkYXRhOiBbRE9ORV0KCg=="
+            ],
+            "expected": {
+                "text": "Gr\u00fc\u00dfe \ud83d\ude00",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Gr\u00fc\u00dfe \ud83d\ude00",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "indented_data_line_ignored",
+            "chunks_b64": [
+                "ICBkYXRhOiB7ImNob2ljZXMiOlt7ImRlbHRhIjp7ImNvbnRlbnQiOiJYIn19XX0KCmRhdGE6IHsiaWQiOiJ4Iiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY2hvaWNlcyI6W3siaW5kZXgiOjAsImRlbHRhIjp7ImNvbnRlbnQiOiJZIn19XX0KCmRhdGE6IFtET05FXQoK"
+            ],
+            "expected": {
+                "text": "Y",
+                "sse": true,
+                "has_content": true,
+                "ended": true,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Y",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "not_sse_plain_json",
+            "chunks_b64": [
+                "eyJpZCI6ImMiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24iLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwibWVzc2FnZSI6eyJyb2xlIjoiYXNzaXN0YW50IiwiY29udGVudCI6IktlaW4gU3Ryb20ifSwiZmluaXNoX3JlYXNvbiI6InN0b3AifV19"
+            ],
+            "expected": {
+                "text": "",
+                "sse": false,
+                "has_content": false,
+                "ended": false,
+                "error": ""
+            },
+            "expected_result": {
+                "text": "Kein Strom",
+                "fehler": ""
+            }
+        },
+        {
+            "name": "not_sse_error_json",
+            "chunks_b64": [
+                "eyJlcnJvciI6eyJtZXNzYWdlIjoibW9kZWwgbm90IGZvdW5kIn19"
+            ],
+            "expected": {
+                "text": "",
+                "sse": false,
+                "has_content": false,
+                "ended": false,
+                "error": ""
+            },
+            "expected_result": {
+                "text": null,
+                "fehler": "Antwort ohne Text"
+            }
+        }
+    ],
+    "embed_result": [
+        {
+            "name": "two_vectors_sorted_by_index",
+            "http_status": 200,
+            "body": "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"index\":1,\"embedding\":[0.5,-1.25,3]},{\"object\":\"embedding\",\"index\":0,\"embedding\":[0.1,0.2,0.3]}],\"model\":\"x\"}",
+            "transport_error": "",
+            "text_count": 2,
+            "embed_model": "bge-m3",
+            "expected_result": "{\"vektoren\":[\"zczMPc3MTD6amZk+\",\"AAAAPwAAoL8AAEBA\"],\"dims\":3,\"modell\":\"bge-m3\"}",
+            "expected_error": ""
+        },
+        {
+            "name": "float32_rounding_and_ints",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[1,0,-0.0,1e-8,3.4028235e38,0.333333333333,-2.5]}]}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": "{\"vektoren\":[\"AACAPwAAAAAAAACAd8wrMv//f3+rqqo+AAAgwA==\"],\"dims\":7,\"modell\":\"bge-m3\"}",
+            "expected_error": ""
+        },
+        {
+            "name": "missing_index_counts_as_0",
+            "http_status": 200,
+            "body": "{\"data\":[{\"embedding\":[1,2]},{\"index\":1,\"embedding\":[3,4]}]}",
+            "transport_error": "",
+            "text_count": 2,
+            "embed_model": "bge-m3",
+            "expected_result": "{\"vektoren\":[\"AACAPwAAAEA=\",\"AABAQAAAgEA=\"],\"dims\":2,\"modell\":\"bge-m3\"}",
+            "expected_error": ""
+        },
+        {
+            "name": "model_label_non_ascii_is_escaped",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[0.25]}]}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3-\u00fc/v2",
+            "expected_result": "{\"vektoren\":[\"AACAPg==\"],\"dims\":1,\"modell\":\"bge-m3-\\u00fc/v2\"}",
+            "expected_error": ""
+        },
+        {
+            "name": "count_mismatch_fewer",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[1,2]}]}",
+            "transport_error": "",
+            "text_count": 2,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "1 Vektoren fuer 2 Texte"
+        },
+        {
+            "name": "count_mismatch_more",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[1]},{\"index\":1,\"embedding\":[2]}]}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "2 Vektoren fuer 1 Texte"
+        },
+        {
+            "name": "unequal_lengths",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[1,2]},{\"index\":1,\"embedding\":[3]}]}",
+            "transport_error": "",
+            "text_count": 2,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Vektor leer oder ungleich lang"
+        },
+        {
+            "name": "empty_vector",
+            "http_status": 200,
+            "body": "{\"data\":[{\"index\":0,\"embedding\":[]}]}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Vektor leer oder ungleich lang"
+        },
+        {
+            "name": "no_data_field",
+            "http_status": 200,
+            "body": "{\"object\":\"list\"}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Einbettung unlesbar"
+        },
+        {
+            "name": "not_json",
+            "http_status": 200,
+            "body": "Internal Server Error",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Einbettung unlesbar"
+        },
+        {
+            "name": "http_500_long_multibyte_body",
+            "http_status": 500,
+            "body": "\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fcENDE",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Einbettung HTTP 500: \u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc\u00fc"
+        },
+        {
+            "name": "http_404",
+            "http_status": 404,
+            "body": "{\"detail\":\"Not Found\"}",
+            "transport_error": "",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Einbettung HTTP 404: {\"detail\":\"Not Found\"}"
+        },
+        {
+            "name": "transport_error",
+            "http_status": 0,
+            "body": "",
+            "transport_error": "Failed to connect to 127.0.0.1 port 8001: Connection refused",
+            "text_count": 1,
+            "embed_model": "bge-m3",
+            "expected_result": null,
+            "expected_error": "Einbettungsserver nicht erreichbar: Failed to connect to 127.0.0.1 port 8001: Connection refused",
+            "note": "transport error texts are implementation specific; only the prefix \"Einbettungsserver nicht erreichbar: \" is normative"
+        }
+    ],
+    "images": [
+        {
+            "name": "images_off",
+            "images": false,
+            "images_max": 1,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ],
+            "expected": []
+        },
+        {
+            "name": "one_jpeg",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ],
+            "expected": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ]
+        },
+        {
+            "name": "max_1_takes_first",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==",
+                "data:image/png;base64,iVBORw0KGgo="
+            ],
+            "expected": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ]
+        },
+        {
+            "name": "max_2_skips_gif",
+            "images": true,
+            "images_max": 2,
+            "input": [
+                "data:image/gif;base64,R0lGODlh",
+                "data:image/png;base64,iVBORw0KGgo=",
+                "data:image/webp;base64,UklGRg"
+            ],
+            "expected": [
+                "data:image/png;base64,iVBORw0KGgo=",
+                "data:image/webp;base64,UklGRg"
+            ]
+        },
+        {
+            "name": "max_2_of_3_valid",
+            "images": true,
+            "images_max": 2,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==",
+                "data:image/png;base64,iVBORw0KGgo=",
+                "data:image/webp;base64,UklGRg"
+            ],
+            "expected": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==",
+                "data:image/png;base64,iVBORw0KGgo="
+            ]
+        },
+        {
+            "name": "non_strings_skipped",
+            "images": true,
+            "images_max": 2,
+            "input": [
+                123,
+                null,
+                [
+                    "x"
+                ],
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ],
+            "expected": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ]
+        },
+        {
+            "name": "string_not_list",
+            "images": true,
+            "images_max": 1,
+            "input": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==",
+            "expected": []
+        },
+        {
+            "name": "null_input",
+            "images": true,
+            "images_max": 1,
+            "input": null,
+            "expected": []
+        },
+        {
+            "name": "space_in_base64",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/jpeg;base64,AA AA"
+            ],
+            "expected": []
+        },
+        {
+            "name": "empty_payload",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/jpeg;base64,"
+            ],
+            "expected": []
+        },
+        {
+            "name": "uppercase_mime_rejected",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/JPEG;base64,AAAA"
+            ],
+            "expected": []
+        },
+        {
+            "name": "url_not_data",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "https://example.com/a.jpg"
+            ],
+            "expected": []
+        },
+        {
+            "name": "padding_ok",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/png;base64,AAA="
+            ],
+            "expected": [
+                "data:image/png;base64,AAA="
+            ]
+        },
+        {
+            "name": "padding_in_middle_rejected",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/png;base64,AA=A"
+            ],
+            "expected": []
+        },
+        {
+            "name": "trailing_newline_accepted_pcre_dollar",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/png;base64,AAAA\n"
+            ],
+            "expected": [
+                "data:image/png;base64,AAAA\n"
+            ]
+        },
+        {
+            "name": "max_0",
+            "images": true,
+            "images_max": 0,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ],
+            "expected": []
+        },
+        {
+            "name": "max_negative",
+            "images": true,
+            "images_max": -1,
+            "input": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ],
+            "expected": []
+        },
+        {
+            "name": "json_object_values_used",
+            "images": true,
+            "images_max": 1,
+            "input": {
+                "a": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            },
+            "expected": [
+                "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=="
+            ]
+        },
+        {
+            "name": "invalid_skipped_do_not_count",
+            "images": true,
+            "images_max": 1,
+            "input": [
+                "data:image/gif;base64,R0lGODlh",
+                "x",
+                "data:image/png;base64,iVBORw0KGgo="
+            ],
+            "expected": [
+                "data:image/png;base64,iVBORw0KGgo="
+            ]
+        }
+    ],
+    "images_note": "An entry longer than image_max_bytes (4 MiB) is skipped. \"input\" is the job field \"bilder\" as decoded from JSON; a JSON object counts like a list of its values (PHP array). PCRE \"$\" also matches before one final \"\\n\"."
+}

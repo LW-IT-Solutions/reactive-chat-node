@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    rc-node for .NET 8 - the reactive.chat "bring your own model" AI node.
+    Plain console application, no NuGet dependencies (base class library only).
+
+    Build and publish commands (self-contained single-file builds for linux-x64,
+    linux-arm64 and win-x64): see README.md.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>rc-node</AssemblyName>
+    <RootNamespace>RcNode</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+
+    <Version>2.0.0</Version>
+    <Product>rc-node</Product>
+    <Description>reactive.chat AI node: fetches AI jobs from reactive.chat, answers them with your own OpenAI-compatible model server and delivers the result.</Description>
+    <Copyright>MIT License</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- The node needs no culture data: no ICU on minimal Linux hosts, identical number
+         and date formatting everywhere. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- A small long-running worker: workstation GC, no background GC thread per core. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+
+    <!-- Only src/ belongs to the program; tests/ is a separate project. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Deterministic>true</Deterministic>
+
+    <!-- Settings used by "dotnet publish -p:PublishSingleFile=true". -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile Condition="'$(SelfContained)' == 'true'">true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+
+</Project>

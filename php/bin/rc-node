@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+// Composer entry point (vendor/bin/rc-node). The node itself is ../rc-node.php.
+require __DIR__ . '/../rc-node.php';

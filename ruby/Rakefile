@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+
+desc 'Run the unit tests (needs ../conformance/vectors.json or RC_NODE_VECTORS)'
+task :test do
+  ruby File.join(__dir__, 'test', 'run.rb')
+end
+
+task default: :test

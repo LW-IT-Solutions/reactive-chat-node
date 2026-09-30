@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# rc-node - reactive.chat AI node (bring your own model). MIT licence.
+require_relative '../lib/rc_node'
+
+exit RcNode::CLI.run(ARGV)
