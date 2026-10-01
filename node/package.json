@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "reactive.chat own AI node (bring your own model): fetches your workspace's AI jobs, lets your OpenAI-compatible model answer them and delivers the results. Outbound HTTPS only.",
   "license": "MIT",
+  "author": "Lukas Wójcik (LW IT Solutions)",
   "homepage": "https://reactive.chat",
   "keywords": ["reactive.chat", "llm", "vllm", "ollama", "openai-compatible", "chat", "self-hosted"],
   "bin": {

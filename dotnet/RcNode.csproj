@@ -20,7 +20,8 @@
     <Version>2.0.0</Version>
     <Product>rc-node</Product>
     <Description>reactive.chat AI node: fetches AI jobs from reactive.chat, answers them with your own OpenAI-compatible model server and delivers the result.</Description>
-    <Copyright>MIT License</Copyright>
+    <Copyright>Copyright (c) 2026 Lukas Wójcik (LW IT Solutions)</Copyright>
+    <Authors>Lukas Wójcik (LW IT Solutions)</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <!-- The node needs no culture data: no ICU on minimal Linux hosts, identical number

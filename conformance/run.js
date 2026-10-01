@@ -21,12 +21,13 @@
 'use strict';
 
 const http = require('http');
+const https = require('https');
 const net = require('net');
 const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 
 const VECTORS = JSON.parse(fs.readFileSync(path.join(__dirname, 'vectors.json'), 'utf8'));
 const RETRY_SUFFIX = VECTORS.retry_suffix;
@@ -164,9 +165,18 @@ class RcMock {
         this.teilMaxInFlight = 0;
         this.teilLastN = new Map();
         for (const j of opt.jobs || []) { this.queue.push(j); }
-        this.server = http.createServer((req, res) => {
+        const handler = (req, res) => {
             this.handle(req, res).catch((e) => { sendJson(res, 500, { fehler: 'mock: ' + e.message }); });
-        });
+        };
+        this.tlsErrors = [];                            // failed TLS handshakes (tls mode)
+        this.sni = [];                                  // servername of every completed handshake
+        if (opt.tls) {
+            this.server = https.createServer({ key: opt.tls.key, cert: opt.tls.cert }, handler);
+            this.server.on('secureConnection', (sock) => { this.sni.push(sock.servername || ''); });
+            this.server.on('tlsClientError', (e) => { this.tlsErrors.push(e.code || e.message); });
+        } else {
+            this.server = http.createServer(handler);
+        }
         this.server.keepAliveTimeout = 5000;
     }
 
@@ -210,6 +220,7 @@ class RcMock {
                       body: body.toString('utf8'), action: params.get('action') || '', status: 0,
                       sigOk: false, sigFail: '', violations: [] };
         for (const [k, v] of params) { rec.params[k] = v; }
+        rec.sni = req.socket && req.socket.servername;
         this.requests.push(rec);
         let closed = false;
         res.on('close', () => { closed = true; });
@@ -1060,6 +1071,92 @@ add({
     },
 });
 
+// ---- TLS (throwaway CA generated at runtime with the openssl CLI) ------------
+let PKI = null;
+function pki() {
+    if (PKI) { return PKI; }
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'rc-conf-pki-'));
+    process.on('exit', () => { try { fs.rmSync(d, { recursive: true, force: true }); } catch (e) { /* ignore */ } });
+    const o = (...a) => execFileSync('openssl', a, { cwd: d, stdio: ['ignore', 'ignore', 'pipe'] });
+    const ca = (name) => {
+        o('req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', name + '.key', '-out', name + '.crt', '-days', '2',
+          '-subj', '/CN=rc-conformance ' + name, '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign');
+    };
+    const leaf = (caName, host, name) => {
+        o('req', '-newkey', 'rsa:2048', '-nodes', '-keyout', name + '.key', '-out', name + '.csr', '-subj', '/CN=' + host);
+        fs.writeFileSync(path.join(d, name + '.ext'), `subjectAltName=DNS:${host}\nbasicConstraints=CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n`);
+        o('x509', '-req', '-in', name + '.csr', '-CA', caName + '.crt', '-CAkey', caName + '.key', '-CAcreateserial',
+          '-out', name + '.crt', '-days', '2', '-extfile', name + '.ext');
+        return { key: fs.readFileSync(path.join(d, name + '.key')), cert: fs.readFileSync(path.join(d, name + '.crt')) };
+    };
+    ca('ca'); ca('ca-untrusted');
+    const sys = fs.existsSync('/etc/ssl/certs/ca-certificates.crt') ? fs.readFileSync('/etc/ssl/certs/ca-certificates.crt', 'utf8') : '';
+    const bundle = path.join(d, 'bundle.crt');
+    fs.writeFileSync(bundle, sys + '\n' + fs.readFileSync(path.join(d, 'ca.crt'), 'utf8'));
+    // PHP's libcurl ignores SSL_CERT_FILE/CURL_CA_BUNDLE (it passes its compiled-in CA file); set curl.cainfo via an extra ini dir
+    fs.mkdirSync(path.join(d, 'php-ini'));
+    fs.writeFileSync(path.join(d, 'php-ini', 'rc-conformance-ca.ini'), 'curl.cainfo=' + bundle + '\nopenssl.cafile=' + bundle + '\n');
+    PKI = { dir: d, caFile: path.join(d, 'ca.crt'), bundle,
+            ok: leaf('ca', 'rc-mock.test', 'ok'), wrongName: leaf('ca', 'other.test', 'other'),
+            untrusted: leaf('ca-untrusted', 'rc-mock.test', 'untrusted') };
+    return PKI;
+}
+// trust the test CA in every runtime: OpenSSL (php/python/ruby/go/.NET), curl, requests, Node
+function tlsTrustEnv() {
+    const p = pki();
+    // PHP_INI_SCAN_DIR: the empty element before ':' keeps the default conf.d, then ours is added
+    return { NODE_EXTRA_CA_CERTS: p.caFile, SSL_CERT_FILE: p.bundle, CURL_CA_BUNDLE: p.bundle, REQUESTS_CA_BUNDLE: p.bundle,
+             PHP_INI_SCAN_DIR: (process.env.PHP_INI_SCAN_DIR || '') + ':' + path.join(p.dir, 'php-ini') };
+}
+const TLS_ENV_KEYS = ['NODE_EXTRA_CA_CERTS', 'SSL_CERT_FILE', 'CURL_CA_BUNDLE', 'REQUESTS_CA_BUNDLE', 'PHP_INI_SCAN_DIR'];
+const tlsCfg = (ctx, extra = {}) => base(ctx, Object.assign({ base_url: `https://rc-mock.test:${ctx.rc.port}`,
+    resolve: `rc-mock.test:${ctx.rc.port}:127.0.0.1`, tls_verify: true }, extra));
+function tlsWorks(x, ctx, r, id) {
+    x(r.code === 0, `exit ${r.code}, want 0`);
+    const res = onlyResult(x, ctx);
+    x(String(res.raw.id) === String(id), `bring for job ${id}: ${JSON.stringify(res.raw)}`);
+    x(res.raw.text === 'Wir oeffnen um 9 Uhr.', `delivered text ${JSON.stringify(res.raw.text)}`);
+    x(ctx.rc.requests.length >= 2 && ctx.rc.requests.every((q) => q.headers.host === `rc-mock.test:${ctx.rc.port}`),
+      `Host header must be rc-mock.test:${ctx.rc.port}, got ${[...new Set(ctx.rc.requests.map((q) => q.headers.host))].join(',')}`);
+    x(ctx.rc.sni.length >= 1 && ctx.rc.sni.every((n) => n === 'rc-mock.test'), `TLS SNI must be rc-mock.test, got ${JSON.stringify(ctx.rc.sni)}`);
+}
+function tlsRefused(x, ctx, r) {
+    x(r.code === 1, `exit ${r.code}, want 1 (certificate must be rejected)`);
+    x(ctx.rc.requests.length === 0, `no request may reach the server over an unverified connection, got ${ctx.rc.requests.map((q) => q.action).join(',')}`);
+}
+add({
+    name: 'tls_ok', mode: 'once',
+    rc: () => ({ jobs: [job(1201)], tls: pki().ok }),
+    model: { reply: fixed([{ content: 'Wir oeffnen um 9 Uhr.' }]) },
+    envDelete: TLS_ENV_KEYS, env: () => tlsTrustEnv(),
+    config: (ctx) => tlsCfg(ctx),
+    check(ctx, r, x) { tlsWorks(x, ctx, r, 1201); },
+});
+add({
+    name: 'tls_untrusted', mode: 'probe',
+    rc: () => ({ jobs: [job(1202)], tls: pki().untrusted }),
+    model: { reply: fixed([{ content: 'Bereit' }]) },
+    envDelete: TLS_ENV_KEYS, env: () => tlsTrustEnv(),
+    config: (ctx) => tlsCfg(ctx),
+    check(ctx, r, x) { tlsRefused(x, ctx, r); },
+});
+add({
+    name: 'tls_verify_off', mode: 'once',
+    rc: () => ({ jobs: [job(1203)], tls: pki().untrusted }),
+    model: { reply: fixed([{ content: 'Wir oeffnen um 9 Uhr.' }]) },
+    envDelete: TLS_ENV_KEYS, env: () => tlsTrustEnv(),
+    config: (ctx) => tlsCfg(ctx, { tls_verify: false }),
+    check(ctx, r, x) { tlsWorks(x, ctx, r, 1203); },
+});
+add({
+    name: 'tls_wrong_name', mode: 'probe',
+    rc: () => ({ jobs: [job(1204)], tls: pki().wrongName }),
+    model: { reply: fixed([{ content: 'Bereit' }]) },
+    envDelete: TLS_ENV_KEYS, env: () => tlsTrustEnv(),
+    config: (ctx) => tlsCfg(ctx),
+    check(ctx, r, x) { tlsRefused(x, ctx, r); },
+});
+
 // ---- config / CLI -------------------------------------------------------------
 add({
     name: 'kinds_aliases_and_capabilities', mode: 'once',
@@ -1153,7 +1250,7 @@ function parseArgs(argv) {
 
 async function runCase(c, opts) {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rc-conf-'));
-    const rc = new RcMock(Object.assign({ secret: SECRET }, c.rc || {}));
+    const rc = new RcMock(Object.assign({ secret: SECRET }, typeof c.rc === 'function' ? c.rc() : (c.rc || {})));
     const model = new ModelMock(c.model || {});
     await rc.start();
     await model.start();
@@ -1168,7 +1265,8 @@ async function runCase(c, opts) {
         const flag = { probe: '--probe', once: '--once', one: '--one', daemon: '--daemon' }[c.mode];
         const env = Object.assign({}, process.env);
         delete env.RC_NODE_CONFIG; delete env.RC_NODE_SECRET; delete env.RC_NODE_MODEL_API_KEY;
-        Object.assign(env, c.env || {});
+        for (const k of c.envDelete || []) { delete env[k]; }
+        Object.assign(env, typeof c.env === 'function' ? c.env(ctx) : (c.env || {}));
         r = await new Promise((resolve) => {
             const t0 = now();
             let out = ''; let err = ''; let done = false; let timedOut = false;

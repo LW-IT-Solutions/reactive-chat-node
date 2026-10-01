@@ -124,6 +124,10 @@ A full run takes about 35 s (plus about 55 s with `--slow`).
 | `azure_chat_url_api_key` | `chat_url` used verbatim, `api-key` header, no `/models` |
 | `basic_auth` | HTTP basic auth on every reactive.chat request, never to the model |
 | `resolve_fixed_address` | `resolve` pins the address, `Host` header keeps the name |
+| `tls_ok` | HTTPS mock with a cert for `rc-mock.test` from a throwaway CA (openssl CLI, trusted via NODE_EXTRA_CA_CERTS, SSL_CERT_FILE, CURL_CA_BUNDLE, REQUESTS_CA_BUNDLE, PHP_INI_SCAN_DIR+curl.cainfo), `resolve`: job delivered, Host and SNI = rc-mock.test |
+| `tls_untrusted` | CA not trusted: probe exit 1, no request reaches the mock |
+| `tls_verify_off` | untrusted CA with `tls_verify: false`: works |
+| `tls_wrong_name` | trusted CA, cert for `other.test`: probe exit 1, no request |
 | `kinds_aliases_and_capabilities` | `translation`/`summary`/`embedding` mapped to wire names in `arten`/`kann` |
 | `poll_wait_clamp` | `poll_wait: 99` sends `warte=60` |
 | `config_*` | missing `node_id`, `node_id` without `kn-`, embedding without `embed_url`, no model endpoint, invalid JSON: exit 2, stderr, no traffic |

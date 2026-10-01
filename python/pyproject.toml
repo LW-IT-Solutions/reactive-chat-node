@@ -9,7 +9,7 @@ description = "reactive.chat AI node: answer your workspace's AI jobs with your 
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "reactive.chat" }]
+authors = [{ name = "Lukas Wójcik (LW IT Solutions)" }]
 dependencies = []
 keywords = ["reactive.chat", "llm", "openai-compatible", "vllm", "ollama", "self-hosted"]
 classifiers = [

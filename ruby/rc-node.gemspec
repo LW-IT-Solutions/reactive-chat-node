@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
                        'HMAC-signed), lets your own OpenAI-compatible model server (vLLM, Ollama, ' \
                        'LM Studio, llama.cpp, Azure OpenAI) answer them and delivers the results. ' \
                        'No inbound port. Standard library only.'
-  spec.authors       = ['reactive.chat']
+  spec.authors       = ['Lukas Wójcik (LW IT Solutions)']
   spec.homepage      = 'https://reactive.chat'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.0'

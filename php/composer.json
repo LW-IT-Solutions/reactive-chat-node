@@ -3,6 +3,7 @@
     "description": "reactive.chat AI node (bring your own model) - PHP edition. Fetches your workspace's AI jobs from reactive.chat, answers them with your own OpenAI-compatible model and delivers the answers back.",
     "type": "project",
     "license": "MIT",
+    "authors": [{ "name": "Lukas Wójcik (LW IT Solutions)" }],
     "version": "2.0.0",
     "keywords": ["reactive.chat", "llm", "vllm", "ollama", "openai", "ai-node", "self-hosted"],
     "homepage": "https://reactive.chat",
